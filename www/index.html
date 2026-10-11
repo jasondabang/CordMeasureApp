@@ -835,10 +835,11 @@
     input, select, textarea { font-size:16px !important; }
     button { touch-action:manipulation; }
     #btnPrevious { min-height:46px; }
-    #btnNext, button[onclick="nextCutSequence()"] { width:75% !important; }
+    #btnNext { width:75% !important; }
     button[onclick="resetCalculator()"] { width:25% !important; }
-    #btnNext span, button[onclick="resetCalculator()"] span { white-space:nowrap; }
-    @media (max-width:420px) { #btnNext { font-size:12px !important; padding-left:4px !important; padding-right:4px !important; gap:4px !important; } button[onclick="resetCalculator()"] { font-size:10px !important; gap:3px !important; } }
+    #btnNext span, button[onclick="resetCalculator()"] span, #btnNextCut span { white-space:nowrap; }
+    #btnNextCut { width:100% !important; min-height:48px; }
+    @media (max-width:420px) { #btnNext { font-size:12px !important; padding-left:4px !important; padding-right:4px !important; gap:4px !important; } #btnNextCut { font-size:14px !important; } button[onclick="resetCalculator()"] { font-size:10px !important; gap:3px !important; } }
   </style>
 
 
@@ -1081,7 +1082,13 @@
             <i class="fa-solid fa-calculator text-lg"></i> CALCULATE CUT
           </button>
 
-          <!-- Reset is 25% left; Previous Cut is 75% right. -->
+          <!-- NEXT CUT: carry the previous cutting point into the next sequence. -->
+          <button onclick="nextCutSequence()" id="btnNextCut" disabled
+            class="w-full mt-2 py-3.5 px-5 rounded-xl bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 disabled:opacity-40 disabled:cursor-not-allowed text-slate-950 font-black text-base border border-emerald-300/70 shadow-lg shadow-emerald-500/10 transition btn-smooth flex items-center justify-center gap-2">
+            <i class="fa-solid fa-forward-step"></i><span>NEXT CUT</span>
+          </button>
+
+          <!-- Previous Cut and Reset remain available below Next Cut. -->
           <div class="flex flex-row flex-nowrap gap-2">
             <button onclick="resetCalculator()"
               class="w-1/4 min-w-0 py-3 px-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-extrabold text-xs border border-slate-400 transition btn-smooth flex items-center justify-center gap-2">
@@ -1221,6 +1228,9 @@
             </button>
             <button onclick="exportHistoryCSV()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-mono border border-slate-700 transition btn-smooth flex items-center gap-1.5">
               <i class="fa-solid fa-file-csv text-emerald-400"></i> Export CSV
+            </button>
+            <button onclick="exportAllLogsJSON()" class="px-3 py-1.5 rounded-xl bg-indigo-950 hover:bg-indigo-900 text-indigo-100 text-xs font-mono border border-indigo-700 transition btn-smooth flex items-center gap-1.5">
+              <i class="fa-solid fa-file-export text-indigo-300"></i> Export All Logs (JSON)
             </button>
             <button onclick="closeHistoryModal()" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition btn-smooth flex items-center justify-center">
               <i class="fa-solid fa-xmark text-lg"></i>
@@ -1659,6 +1669,9 @@
       }
 
       autoSaveCut();
+      const nextCutButton = document.getElementById('btnNextCut');
+      if (nextCutButton) nextCutButton.disabled = !currentCalculation;
+      saveCalculatorDraft();
     }
 
     function autoSaveCut() {
@@ -1943,6 +1956,8 @@
       document.getElementById('statusDescription').textContent = `Starting Reel Mark set to ${nextInitial}m (Cutting Point of previous cut). Enter new Target End Mark.`;
 
       document.getElementById('btnSave').disabled = true;
+      const nextCutButton = document.getElementById('btnNextCut');
+      if (nextCutButton) nextCutButton.disabled = true;
       
       currentCalculation = null;
 
@@ -2230,6 +2245,35 @@
         if (input) input.value = '';
       };
       reader.readAsText(file);
+    }
+
+    // Export every saved cut plus calculator draft, sequence, total-reel tracking, presets, and sound preference.
+    function exportAllLogsJSON() {
+      try {
+        const backup = {
+          app: 'Simple Cord Length Calculator',
+          version: 'v12-plus-next-cut-autosave-export',
+          exportedAt: new Date().toISOString(),
+          history: savedCutHistory,
+          calculatorDraft: JSON.parse(localStorage.getItem('cord_calc_draft') || 'null'),
+          totalCordLength: localStorage.getItem('cord_calc_total_length'),
+          totalCordRemaining: localStorage.getItem('cord_calc_total_remaining'),
+          totalLengthChoice: localStorage.getItem('cord_calc_total_choice'),
+          quickSlackPresets: JSON.parse(localStorage.getItem('cordQuickSlackPresets') || 'null'),
+          soundEnabled: localStorage.getItem('cord_calc_sound')
+        };
+        const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json;charset=utf-8' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `cord_calculator_all_logs_${new Date().toISOString().slice(0,10)}.json`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+        showToast('Full JSON backup with all logs generated!', 'success');
+      } catch (err) {
+        console.error('Full JSON export failed:', err);
+        showToast('Could not export the full backup.', 'error');
+      }
     }
 
     function exportHistoryCSV() {
