@@ -1,23 +1,22 @@
 
-const CACHE_NAME = "cord-calculator-v14";
+const CACHE_NAME = "cord-calculator-v13-autosave-fix";
 const APP_SHELL = ["./", "./index.html", "./manifest.json"];
 
 self.addEventListener("install", event => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
 
-    await Promise.all(
-      APP_SHELL.map(async path => {
-        try {
-          const response = await fetch(path, { cache: "reload" });
-          if (response.ok) {
-            await cache.put(path, response);
-          }
-        } catch (error) {
-          // Allow installation to continue if a resource is unavailable.
+    await Promise.all(APP_SHELL.map(async path => {
+      try {
+        const response = await fetch(path, {
+          cache: "reload"
+        });
+
+        if (response.ok) {
+          await cache.put(path, response);
         }
-      })
-    );
+      } catch (_) {}
+    }));
 
     await self.skipWaiting();
   })());
@@ -29,10 +28,7 @@ self.addEventListener("activate", event => {
 
     await Promise.all(
       keys
-        .filter(key =>
-          key.startsWith("cord-calculator-") &&
-          key !== CACHE_NAME
-        )
+        .filter(key => key !== CACHE_NAME)
         .map(key => caches.delete(key))
     );
 
@@ -41,39 +37,38 @@ self.addEventListener("activate", event => {
 });
 
 self.addEventListener("fetch", event => {
-  const request = event.request;
+  const req = event.request;
 
-  if (request.method !== "GET") return;
+  if (req.method !== "GET") return;
 
-  const url = new URL(request.url);
+  const url = new URL(req.url);
 
   if (url.origin !== self.location.origin) return;
 
-  const isHtml =
-    request.mode === "navigate" ||
+  const isAppHtml =
+    req.mode === "navigate" ||
     url.pathname.endsWith("/index.html") ||
     url.pathname.endsWith("/");
 
-  if (isHtml) {
+  if (isAppHtml) {
     event.respondWith((async () => {
-      const cache = await caches.open(CACHE_NAME);
-
       try {
-        const response = await fetch(request, {
+        const fresh = await fetch(req, {
           cache: "no-store"
         });
 
-        if (response.ok) {
-          await cache.put(request, response.clone());
-          await cache.put("./index.html", response.clone());
+        if (fresh && fresh.ok) {
+          const cache = await caches.open(CACHE_NAME);
+          await cache.put("./index.html", fresh.clone());
         }
 
-        return response;
-      } catch (error) {
+        return fresh;
+      } catch (_) {
+        const cache = await caches.open(CACHE_NAME);
+
         return (
-          await cache.match(request) ||
+          await cache.match(req) ||
           await cache.match("./index.html") ||
-          await cache.match("./") ||
           Response.error()
         );
       }
@@ -84,19 +79,19 @@ self.addEventListener("fetch", event => {
 
   event.respondWith((async () => {
     const cache = await caches.open(CACHE_NAME);
-    const cached = await cache.match(request);
+    const cached = await cache.match(req);
 
     if (cached) return cached;
 
     try {
-      const response = await fetch(request);
+      const response = await fetch(req);
 
-      if (response.ok) {
-        await cache.put(request, response.clone());
+      if (response && response.ok) {
+        await cache.put(req, response.clone());
       }
 
       return response;
-    } catch (error) {
+    } catch (_) {
       return Response.error();
     }
   })());
