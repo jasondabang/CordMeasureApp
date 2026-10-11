@@ -1,138 +1,1468 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en" class="daylight">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#101828">
-<title>CordMate — Cord Length Calculator</title>
-<style>
-:root{color-scheme:dark;--bg:#0a1020;--panel:#141e32;--ink:#f5f8ff;--muted:#aebbd0;--line:#34435f;--cyan:#48e0d0;--lime:#c9f36d}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 8% 0%,#1b4058,transparent 36%),radial-gradient(ellipse at 100% 100%,#33254e,transparent 38%),var(--bg);color:var(--ink);font-family:system-ui,sans-serif}
-.app{max-width:1120px;margin:auto;padding:12px;display:grid;gap:10px}.top,.brand,.panelhead,.historyhead,.result,.foot{display:flex;align-items:center;justify-content:space-between;gap:8px}.brand{justify-content:flex-start}.logo{width:42px;height:42px;display:grid;place-items:center;border-radius:14px;background:linear-gradient(135deg,var(--cyan),var(--lime));color:#101828;font-size:24px;font-weight:1000}.title{font-size:clamp(19px,4vw,27px);font-weight:950}.subtitle,.metric label,.paneltitle,.tag,.field label,.field small,.foot,.formula{color:var(--muted)}.subtitle{font-size:10px;letter-spacing:1px;text-transform:uppercase}.save{background:#123b3b;border:1px solid #37695f;color:#9ef9dc;padding:7px 10px;border-radius:99px;font-size:11px}
-.metrics,.status{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.status{grid-template-columns:1fr 1fr}.metric,.panel{background:#141e32ef;border:1px solid var(--line);border-radius:15px;padding:11px;min-width:0}.metric label{display:block;font-size:10px;font-weight:850;letter-spacing:.5px;text-transform:uppercase}.metric strong{display:block;font:850 clamp(22px,5vw,31px)/1.2 ui-monospace,monospace;margin-top:5px;white-space:nowrap;overflow:hidden}.metric strong span{font:700 11px system-ui;color:var(--muted)}.remaining{border-color:#3e786b;background:#16453f}.remaining strong{color:var(--lime)}.status .metric strong{font-size:21px}
-.workspace{display:grid;grid-template-columns:.95fr 1.05fr;gap:10px}.panel{display:flex;flex-direction:column;gap:10px}.paneltitle{font-size:12px;font-weight:950;letter-spacing:1px;text-transform:uppercase;color:var(--ink)}.tag{color:var(--cyan);font-size:10px;font-weight:900}.fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}.field{min-width:0}.field label{display:block;font-size:11px;font-weight:800;margin-bottom:5px}.field input{width:100%;background:#080f1e;border:1px solid #3a4b68;border-radius:12px;color:white;padding:10px;font:850 22px ui-monospace,monospace}.field input:focus,button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}.field small{display:block;font-size:10px;margin-top:4px}.cutline{display:flex;align-items:end;gap:7px}.cutline .field{flex:1}.stepper{display:flex;gap:5px}.stepper button{font-size:22px;color:var(--cyan);min-width:42px}
-button{cursor:pointer;border:1px solid var(--line);background:#1c2a43;color:var(--ink);border-radius:12px;font-weight:800;padding:9px 10px;min-height:39px}button:active{transform:scale(.98)}button:disabled{opacity:.45;cursor:not-allowed;transform:none}.result{background:#0c2e32;border:1px solid #2c7773;border-radius:13px;padding:10px 12px}.result span{font-size:10px;color:#9fe9dd;font-weight:900;text-transform:uppercase}.result strong{font:900 clamp(23px,5vw,31px) ui-monospace,monospace;color:var(--lime)}.formula{text-align:center;font-size:10px}.actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}.actions button{font-size:12px}.primary{background:linear-gradient(135deg,var(--cyan),#70f2b2);color:#071a24;border:0}.next{background:linear-gradient(135deg,var(--lime),#f0ffb6);color:#192313;border:0}.prev{background:#1b3356;color:#d7e5ff}.danger{background:#321d2a;color:#ffadb5;border-color:#79434e}.historytools{display:flex;gap:6px}.historytools button{flex:1;font-size:11px}.tablewrap{overflow:auto;max-height:420px;min-height:180px;border:1px solid #2c3952;border-radius:10px}table{width:100%;border-collapse:collapse;font-size:11px;font-variant-numeric:tabular-nums}thead{position:sticky;top:0;background:#202d45}th,td{padding:8px 6px;text-align:left;white-space:nowrap;border-bottom:1px solid #253149}th{font-size:9px;text-transform:uppercase;color:#bdcbe0}td.num{text-align:right;font-family:ui-monospace,monospace;font-weight:800}td.positive{color:var(--lime)}tbody tr:nth-child(even){background:#182237}tbody tr.active{background:#18433f}.empty{text-align:center;color:#8292ac;padding:24px 6px}.foot{font-size:9px;color:#8fa0bb}.foot b{color:#c4d2e6}.smallnote{font-size:10px;color:var(--muted);line-height:1.4}input[type=file]{display:none}.toast{position:fixed;bottom:18px;left:50%;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#e8fff7;color:#09241d;padding:10px 14px;border-radius:12px;font-size:12px;font-weight:850;transition:.2s;z-index:5;max-width:90%}.toast.show{opacity:1;transform:translate(-50%,0)}
-@media(max-width:700px){.app{padding:8px;gap:7px}.logo{width:36px;height:36px}.subtitle{font-size:8px}.save{font-size:9px;padding:6px}.metrics{gap:5px}.metric{padding:8px 6px}.metric label{font-size:8px}.metric strong{font-size:clamp(17px,5.3vw,24px)}.metric strong span{font-size:9px}.workspace{grid-template-columns:1fr}.panel{padding:10px;gap:8px}.paneltitle{font-size:10px}.field input{font-size:20px;padding:9px}.actions{gap:5px}.actions button{font-size:10px;padding:7px 5px}.tablewrap{max-height:330px}th,td{padding:7px 5px}}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Cord Calculator & Cut Sequencer</title>
+  
+  <!-- PWA & Mobile Meta Tags -->
+  <meta name="theme-color" content="#f6f7f9" />
+  <meta name="description" content="Minimalist Cord Calculator, Meter Verification and Cut Sequencer for cable field technicians." />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Cord Calc" />
+
+  <!-- Embedded Web App Manifest for Offline PWA Installation -->
+  <link rel="manifest" href='data:application/manifest+json,{"name":"Cord Calculator %26 Cut Sequencer","short_name":"Cord Calc","start_url":"./","display":"standalone","background_color":"%23020617","theme_color":"%23020617","icons":[{"src":"data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%23f59e0b%22/><path d=%22M30 30 L70 70 M70 30 L30 70%22 stroke=%22%23020617%22 stroke-width=%2212%22 stroke-linecap=%22round%22/></svg>","sizes":"512x512","type":"image/svg+xml"}]}' />
+  
+  <!-- SVG Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23f59e0b'/><path d='M30 30 L70 70 M70 30 L30 70' stroke='%23020617' stroke-width='12' stroke-linecap='round'/></svg>" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- Inter & JetBrains Mono Fonts CDN -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#fffbebe',
+              100: '#fef3c7',
+              400: '#fbbf24',
+              500: '#f59e0b',
+              600: '#d97706',
+              700: '#b45309',
+            }
+          },
+          animation: {
+            'pulse-fast': 'pulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'fade-in': 'fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'slide-up': 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            slideUp: {
+              '0%': { opacity: '0', transform: 'translateY(12px) scale(0.98)' },
+              '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #020617;
+      color: #f8fafc;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .glass-card {
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .glass-card:hover {
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    .glow-green {
+      box-shadow: 0 0 30px -5px rgba(16, 185, 129, 0.25);
+    }
+
+    .glow-red {
+      box-shadow: 0 0 30px -5px rgba(239, 68, 68, 0.25);
+    }
+
+    .btn-smooth {
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .btn-smooth:active {
+      transform: scale(0.97);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #020617;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+
+    /* Hide number input spinners */
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+      -webkit-appearance: none;
+      margin: 0; 
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+  </style>
+
+  <style id="daylight-ui">
+    /* =========================================================
+       DAYLIGHT / FIELD VISIBILITY UI
+       Visual-only redesign: calculator logic is unchanged.
+       ========================================================= */
+    :root {
+      color-scheme: light;
+      --day-bg: #f3f5f7;
+      --day-surface: #ffffff;
+      --day-surface-2: #f8fafc;
+      --day-border: #cbd5e1;
+      --day-border-strong: #94a3b8;
+      --day-text: #0f172a;
+      --day-text-2: #334155;
+      --day-muted: #64748b;
+      --day-amber: #b45309;
+      --day-amber-bg: #fff7ed;
+      --day-green: #047857;
+      --day-green-bg: #ecfdf5;
+      --day-red: #b91c1c;
+      --day-red-bg: #fef2f2;
+      --day-blue: #0369a1;
+      --day-blue-bg: #eff6ff;
+    }
+
+    html.daylight {
+      background: var(--day-bg);
+    }
+
+    body {
+      background:
+        radial-gradient(circle at 10% 0%, rgba(245,158,11,.08), transparent 28rem),
+        var(--day-bg) !important;
+      color: var(--day-text) !important;
+    }
+
+    /* Remove glass/translucency that washes out in direct sunlight. */
+    .glass-card {
+      background: var(--day-surface) !important;
+      border-color: var(--day-border) !important;
+      box-shadow: 0 2px 10px rgba(15,23,42,.06), 0 1px 2px rgba(15,23,42,.05);
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+
+    .glass-card:hover {
+      border-color: var(--day-border-strong) !important;
+      box-shadow: 0 4px 16px rgba(15,23,42,.09);
+    }
+
+    /* Header */
+    header {
+      background: rgba(255,255,255,.96) !important;
+      border-color: var(--day-border) !important;
+      box-shadow: 0 1px 8px rgba(15,23,42,.08);
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+
+    header h1,
+    header .text-white {
+      color: var(--day-text) !important;
+    }
+
+    header .text-slate-400,
+    header .text-slate-500 {
+      color: var(--day-muted) !important;
+    }
+
+    /* Common slate utility remapping for daylight contrast. */
+    .bg-slate-950 { background-color: #f8fafc !important; }
+    .bg-slate-900 { background-color: #f1f5f9 !important; }
+    .bg-slate-800 { background-color: #e2e8f0 !important; }
+    .bg-slate-700 { background-color: #cbd5e1 !important; }
+
+    .bg-slate-950\/80 { background-color: rgba(248,250,252,.98) !important; }
+    .bg-slate-950\/90 { background-color: rgba(248,250,252,.98) !important; }
+    .bg-slate-950\/70 { background-color: rgba(255,255,255,.96) !important; }
+    .bg-slate-900\/80 { background-color: rgba(241,245,249,.98) !important; }
+    .bg-slate-800\/80 { background-color: rgba(226,232,240,.96) !important; }
+    .bg-slate-800\/40 { background-color: rgba(226,232,240,.60) !important; }
+    .bg-slate-800\/20 { background-color: rgba(226,232,240,.35) !important; }
+
+    .border-slate-800,
+    .border-slate-800\/60,
+    .border-slate-800\/80,
+    .border-slate-700,
+    .border-slate-700\/80 {
+      border-color: var(--day-border) !important;
+    }
+
+    .divide-slate-800\/60 > :not([hidden]) ~ :not([hidden]) {
+      border-color: #e2e8f0 !important;
+    }
+
+    .text-slate-950 { color: #0f172a !important; }
+    .text-slate-200 { color: #1e293b !important; }
+    .text-slate-300 { color: #334155 !important; }
+    .text-slate-400 { color: #475569 !important; }
+    .text-slate-500 { color: #64748b !important; }
+    .text-slate-600 { color: #475569 !important; }
+    .text-slate-700 { color: #334155 !important; }
+
+    .placeholder-slate-600::placeholder {
+      color: #64748b !important;
+      opacity: 1 !important;
+    }
+
+    /* Inputs: oversized, crisp and easy to see outdoors. */
+    input[type="number"] {
+      background: #ffffff !important;
+      color: #0f172a !important;
+      border-color: #94a3b8 !important;
+      min-height: 54px;
+      box-shadow: inset 0 1px 2px rgba(15,23,42,.05);
+    }
+
+    input[type="number"]:focus {
+      border-color: #d97706 !important;
+      box-shadow: 0 0 0 3px rgba(217,119,6,.18) !important;
+    }
+
+    input[type="number"]:disabled {
+      background: #f1f5f9 !important;
+      color: #475569 !important;
+      border-color: #cbd5e1 !important;
+    }
+
+    /* Touch targets. */
+    button {
+      min-height: 44px;
+    }
+
+    .btn-smooth {
+      box-shadow: 0 1px 2px rgba(15,23,42,.06);
+    }
+
+    /* Amber controls become darker on white for outdoor contrast. */
+    .bg-amber-500\/10 {
+      background-color: #fff7ed !important;
+    }
+    .bg-amber-500\/20 {
+      background-color: #ffedd5 !important;
+    }
+    .bg-amber-500\/25 {
+      background-color: #fed7aa !important;
+    }
+    .border-amber-500\/20,
+    .border-amber-500\/30,
+    .border-amber-500\/40 {
+      border-color: #fdba74 !important;
+    }
+    .text-amber-300,
+    .text-amber-400 {
+      color: #b45309 !important;
+    }
+
+    /* Status states: unmistakable at a glance. */
+    .glow-green {
+      box-shadow: 0 0 0 3px rgba(16,185,129,.10), 0 5px 18px rgba(16,185,129,.12) !important;
+    }
+    .glow-red {
+      box-shadow: 0 0 0 3px rgba(239,68,68,.10), 0 5px 18px rgba(239,68,68,.12) !important;
+    }
+
+    /* Preserve JS-generated PASS/FAIL state colors while increasing contrast. */
+    .bg-emerald-950,
+    .bg-emerald-950\/20,
+    .bg-emerald-950\/80 {
+      background-color: #ecfdf5 !important;
+    }
+    .border-emerald-800,
+    .border-emerald-800\/80,
+    .border-emerald-500\/40,
+    .border-emerald-500\/50 {
+      border-color: #6ee7b7 !important;
+    }
+    .text-emerald-200,
+    .text-emerald-300,
+    .text-emerald-400 {
+      color: #047857 !important;
+    }
+
+    .bg-red-950,
+    .bg-red-950\/20,
+    .bg-red-950\/40,
+    .bg-red-900\/60 {
+      background-color: #fef2f2 !important;
+    }
+    .border-red-800,
+    .border-red-800\/60,
+    .border-red-500\/50 {
+      border-color: #fca5a5 !important;
+    }
+    .text-red-200,
+    .text-red-300,
+    .text-red-400 {
+      color: #b91c1c !important;
+    }
+
+    .bg-sky-500\/10,
+    .bg-sky-500\/20 {
+      background-color: #eff6ff !important;
+    }
+    .text-sky-300,
+    .text-sky-400 {
+      color: #0369a1 !important;
+    }
+    .border-sky-500\/30,
+    .border-sky-500\/40 {
+      border-color: #93c5fd !important;
+    }
+
+    /* Diagram */
+    #barRemaining {
+      background: #cbd5e1 !important;
+      color: #334155 !important;
+    }
+
+    /* Large result numbers: darker text, slightly larger hierarchy. */
+    #dispCuttingPoint,
+    #dispResult {
+      text-shadow: none !important;
+      letter-spacing: -0.03em;
+    }
+
+    #dispCuttingPoint { color: #b45309 !important; }
+    #dispResult { color: #047857 !important; }
+    #dispMeterCheck { color: #475569 !important; }
+
+    /* Modal surfaces. */
+    #historyModal > div,
+    #detailModal > div {
+      background: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      box-shadow: 0 20px 50px rgba(15,23,42,.20);
+    }
+
+    #historyModal,
+    #detailModal {
+      background: rgba(15,23,42,.48) !important;
+      backdrop-filter: blur(3px) !important;
+    }
+
+    /* Table readability. */
+    #modalHistoryTableBody tr:hover {
+      background: #f8fafc !important;
+    }
+
+    /* Scrollbars become visible on light surfaces. */
+    ::-webkit-scrollbar-track {
+      background: #e2e8f0 !important;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #94a3b8 !important;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #64748b !important;
+    }
+
+    /* Primary action: high-contrast orange, not neon. */
+    #btnCalculate {
+      background: #d97706 !important;
+      color: #ffffff !important;
+      border: 1px solid #b45309 !important;
+      box-shadow: 0 4px 10px rgba(180,83,9,.22) !important;
+      min-height: 58px;
+      font-size: 1rem;
+    }
+
+    #btnCalculate:hover {
+      background: #b45309 !important;
+    }
+
+    /* Make the sequence badge readable on white. */
+    #seqBadge {
+      background: #fff7ed !important;
+      color: #b45309 !important;
+      border-color: #fdba74 !important;
+    }
+
+    /* Daylight-friendly focus indicator for keyboard and external keyboards. */
+    :focus-visible {
+      outline: 3px solid rgba(217,119,6,.45) !important;
+      outline-offset: 2px;
+    }
+
+    /* Mobile field use: less wasted whitespace and larger controls. */
+    @media (max-width: 640px) {
+      main {
+        padding-top: .75rem !important;
+      }
+
+      .glass-card {
+        border-radius: 1rem !important;
+      }
+
+      #statusBanner {
+        padding: .9rem !important;
+      }
+
+      #dispCuttingPoint,
+      #dispResult {
+        font-size: 2.15rem !important;
+      }
+
+      #toastContainer {
+        left: .75rem;
+        right: .75rem;
+        bottom: .75rem;
+      }
+
+      #toastContainer > div {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    /* Optional dark-mode compatibility if the device/browser prefers dark,
+       but the app remains manually daylight-first. */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+
 </head>
-<body>
-<main class="app">
-<header class="top"><div class="brand"><div class="logo" aria-hidden="true">↗</div><div><div class="title">CORD<span style="color:var(--cyan)">MATE</span></div><div class="subtitle">Length · Cut · Remaining</div></div></div><div class="save" id="saveState" role="status">● AUTO-SAVED</div></header>
-<section class="metrics" aria-label="Reel summary"><div class="metric"><label>Starting reel</label><strong id="mStart">0.00 <span>m</span></strong></div><div class="metric"><label>Total cut</label><strong id="mCut">0.00 <span>m</span></strong></div><div class="metric remaining"><label>Length left</label><strong id="mLeft">0.00 <span>m</span></strong></div></section>
-<section class="status"><div class="metric"><label>Saved cut records</label><strong id="mCount">0</strong></div><div class="metric"><label>Reel status</label><strong id="mStatus">SET REEL</strong></div></section>
-<div class="workspace">
-<section class="panel"><div class="panelhead"><div class="paneltitle">Cut calculator</div><div class="tag">METERS · m</div></div>
-<div class="fields"><div class="field"><label for="startInput">Starting reel (m)</label><input id="startInput" type="number" min="0" step=".01" inputmode="decimal" placeholder="100.00"><small>Full reel length</small></div><div class="field"><label for="cutInput">Cut length (m)</label><input id="cutInput" type="number" min="0" step=".01" inputmode="decimal" placeholder="2.50"><small>Length for this cut</small></div></div>
-<div class="cutline"><div class="field"><label for="slackInput">Optional allowance (m)</label><input id="slackInput" type="number" min="0" step=".01" inputmode="decimal" value="0"><small>Extra length per cut</small></div><div class="stepper"><button id="minusBtn" type="button" aria-label="Subtract 0.1 m">−</button><button id="plusBtn" type="button" aria-label="Add 0.1 m">+</button></div></div>
-<div class="result"><span>Remaining after this cut</span><strong id="previewLeft">0.00 m</strong></div><div class="formula">Starting reel − saved cuts − cut − allowance = remaining</div>
-<div class="actions"><button id="prevBtn" class="prev" type="button">← Previous cut</button><button id="nextBtn" class="next" type="button">Save & next →</button><button id="clearBtn" class="danger" type="button">Clear reel</button><button id="resetCutBtn" type="button">Reset cut fields</button><button id="exportCsvBtn" class="primary" type="button">Export history CSV</button><button id="exportJsonBtn" type="button">Full JSON backup</button><button id="importCsvBtn" type="button">Import history CSV</button><button id="importJsonBtn" type="button">Restore JSON backup</button><input id="csvFile" type="file" accept=".csv,text/csv"><input id="jsonFile" type="file" accept=".json,application/json"></div><div class="foot"><span>Local autosave <b>ON</b></span><span id="storageNote">Saved on this device</span></div></section>
-<section class="panel"><div class="historyhead"><div class="paneltitle">History & cord remaining</div><div class="foot" id="historyCount">0 records</div></div><div class="historytools"><button id="addBtn" class="primary" type="button">＋ Save current cut</button><button id="undoBtn" class="danger" type="button">Undo last</button></div>
-<div class="tablewrap"><table><thead><tr><th>#</th><th>Cut m</th><th>Allowance</th><th>Used m</th><th>Left m</th><th>Time</th></tr></thead><tbody id="historyBody"><tr><td colspan="6" class="empty">Set a reel length and save your first cut.</td></tr></tbody></table></div><div class="foot"><span>Tap a row to review</span><span><b id="historyTotal">0.00 m</b> total used</span></div><div class="smallnote">Saved in this browser on this device. Export a JSON backup before clearing browser data or moving to another device.</div></section>
-</div></main><div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>
-(function(){
-'use strict';
-var KEY='cordmate.v3.state';
-var state={starting:0,cut:0,slack:0,history:[],cursor:-1};
-var $=function(id){return document.getElementById(id)};
-var start=$('startInput'),cut=$('cutInput'),slack=$('slackInput'),timer=null,toastTimer=null;
-function n(v){if(v===null||v===undefined||String(v).trim()==='')return 0;var x=Number(v);return Number.isFinite(x)&&x>0?x:0}
-function f(v){return (Math.round((Number(v)||0)*100)/100).toFixed(2)}
-function used(){return state.history.reduce(function(a,r){return a+n(r.used)},0)}
-function left(){return Math.max(0,state.starting-used())}
-function note(s){$('toast').textContent=s;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){$('toast').classList.remove('show')},2300)}
-function normalizedRecord(r,i){var c=n(r&&r.cut),s=n(r&&r.slack);return {cut:c,slack:s,used:n(r&&r.used)||c+s,left:n(r&&r.left),time:String(r&&r.time||'—'),id:String(r&&r.id||('record-'+Date.now()+'-'+i))}}
-function save(){
- state.starting=n(start.value);state.cut=n(cut.value);state.slack=n(slack.value);
- try{localStorage.setItem(KEY,JSON.stringify(state));$('saveState').textContent='● AUTO-SAVED';$('storageNote').textContent='Saved on this device'}
- catch(e){$('saveState').textContent='SAVE ISSUE';$('storageNote').textContent='Storage unavailable'}
-}
-function render(){
- state.starting=n(start.value);state.cut=n(cut.value);state.slack=n(slack.value);
- var u=used(),l=left();
- $('mStart').innerHTML=f(state.starting)+' <span>m</span>';$('mCut').innerHTML=f(u)+' <span>m</span>';$('mLeft').innerHTML=f(l)+' <span>m</span>';
- $('mCount').textContent=state.history.length;$('mStatus').textContent=state.starting<=0?'SET REEL':l<=0?'EMPTY':l<state.starting*.1?'LOW':'READY';
- $('previewLeft').textContent=f(Math.max(0,l-state.cut-state.slack))+' m';
- $('nextBtn').disabled=state.starting<=0||state.cut<=0||state.cut+state.slack>l+.000001;
- $('addBtn').disabled=$('nextBtn').disabled;$('prevBtn').disabled=!state.history.length;
- $('undoBtn').disabled=!state.history.length;
- $('historyCount').textContent=state.history.length+' record'+(state.history.length===1?'':'s');$('historyTotal').textContent=f(u)+' m';
- var b=$('historyBody');
- if(!state.history.length){b.innerHTML='<tr><td colspan="6" class="empty">Set a reel length and save your first cut.</td></tr>';return}
- b.innerHTML=state.history.map(function(r,i){return '<tr data-i="'+i+'" class="'+(i===state.cursor?'active':'')+'"><td>'+String(i+1).padStart(2,'0')+'</td><td class="num">'+f(r.cut)+'</td><td class="num">'+f(r.slack)+'</td><td class="num">'+f(r.used)+'</td><td class="num positive">'+f(r.left)+'</td><td>'+String(r.time||'—').replace(/[&<>"]/g,'')+'</td></tr>'}).reverse().join('');
- Array.prototype.forEach.call(b.querySelectorAll('tr[data-i]'),function(tr){tr.onclick=function(){state.cursor=Number(tr.dataset.i);var r=state.history[state.cursor];cut.value=f(r.cut);slack.value=f(r.slack);save();render()}});
-}
-function add(){
- state.starting=n(start.value);state.cut=n(cut.value);state.slack=n(slack.value);
- var c=state.cut,s=state.slack,u=c+s;
- if(state.starting<=0){note('Enter starting reel length first');start.focus();return false}
- if(c<=0){note('Enter a cut length greater than zero');cut.focus();return false}
- var l=left();if(u>l+.000001){note('Not enough cord left on this reel');return false}
- var d=new Date(),id='cut-'+d.getTime()+'-'+Math.random().toString(36).slice(2,8);
- state.history.push({cut:c,slack:s,used:u,left:Math.max(0,l-u),time:d.toLocaleString(),id:id});
- state.cursor=state.history.length-1;
- cut.value='';state.cut=0;save();render();note('Cut saved · '+f(u)+' m used');cut.focus();return true;
-}
-function undo(){if(!state.history.length){note('No cut to undo');return}state.history.pop();state.cursor=state.history.length-1;save();render();note('Last cut removed')}
-function move(d){
- if(!state.history.length){note('No history to navigate');return}
- var next=state.cursor<0?state.history.length-1:state.cursor+d;
- state.cursor=Math.min(Math.max(0,next),state.history.length-1);
- var r=state.history[state.cursor];cut.value=f(r.cut);slack.value=f(r.slack);save();render();
-}
-function clearReel(){
- if(!confirm('Clear this reel and all cut history on this device? Export a backup first if needed.'))return;
- state={starting:0,cut:0,slack:0,history:[],cursor:-1};start.value='';cut.value='';slack.value='0';save();render();note('Reel cleared');
-}
-function dl(name,type,content){var blob=new Blob([content],{type:type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url)},1000)}
-function csvq(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"'}
-function exportCsv(){var rows=[['number','cut_m','allowance_m','total_used_m','remaining_m','time','record_id']];state.history.forEach(function(r,i){rows.push([i+1,r.cut,r.slack,r.used,r.left,r.time,r.id])});dl('cordmate-history-'+new Date().toISOString().slice(0,10)+'.csv','text/csv;charset=utf-8','\ufeff'+rows.map(function(r){return r.map(csvq).join(',')}).join('\r\n'));note('History CSV exported')}
-function exportJson(){save();dl('cordmate-backup-'+new Date().toISOString().slice(0,10)+'.json','application/json;charset=utf-8',JSON.stringify({app:'CordMate',version:3,exportedAt:new Date().toISOString(),data:state},null,2));note('Full JSON backup exported')}
-function parseCsv(t){
- var rows=[],row=[],cell='',q=false;
- for(var i=0;i<t.length;i++){var c=t[i],nx=t[i+1];if(q){if(c==='"'&&nx==='"'){cell+='"';i++}else if(c==='"')q=false;else cell+=c}else if(c==='"')q=true;else if(c===','){row.push(cell);cell=''}else if(c==='\n'){row.push(cell);rows.push(row);row=[];cell=''}else if(c!=='\r')cell+=c}
- if(cell||row.length){row.push(cell);rows.push(row)}return rows;
-}
-function importCsv(file){
- var rd=new FileReader();rd.onload=function(){try{
- var rows=parseCsv(String(rd.result||''));if(rows.length<2)throw Error('No history rows found');
- var h=rows[0].map(function(x){return x.trim().toLowerCase()}),ix=function(a,b){var i=h.indexOf(a);return i<0?h.indexOf(b):i};
- var ci=ix('cut_m','cut'),si=ix('allowance_m','slack'),ui=ix('total_used_m','used'),li=ix('remaining_m','left'),ti=ix('time','timestamp');
- if(ci<0)throw Error('CSV needs a cut_m or cut column');
- var items=[];rows.slice(1).forEach(function(r){var c=n(r[ci]),s=si<0?0:n(r[si]);if(c>0)items.push({cut:c,slack:s,used:ui<0?c+s:(n(r[ui])||c+s),left:li<0?0:n(r[li]),time:ti<0?'Imported':String(r[ti]||'Imported'),id:'csv-'+Date.now()+'-'+items.length})});
- if(!items.length)throw Error('No valid cut records found');
- var append=confirm('Import '+items.length+' records? OK = append; Cancel = replace history.');
- state.history=append?state.history.concat(items):items;state.cursor=state.history.length-1;save();render();note(items.length+' records imported');
- }catch(e){note('CSV import failed: '+e.message)}};rd.readAsText(file);
-}
-function importJson(file){
- var rd=new FileReader();rd.onload=function(){try{
- var o=JSON.parse(String(rd.result||'')),d=o.data||o;if(!Array.isArray(d.history))throw Error('Backup history is missing');
- if(!confirm('Restore backup? Current settings and history will be replaced.'))return;
- state.starting=n(d.starting);state.cut=n(d.cut);state.slack=n(d.slack);state.history=d.history.filter(function(r){return r&&n(r.cut)>0}).map(normalizedRecord);
- state.cursor=state.history.length-1;start.value=state.starting||'';cut.value=state.cut||'';slack.value=state.slack||0;save();render();note('Backup restored');
- }catch(e){note('Restore failed: '+e.message)}};rd.readAsText(file);
-}
-[start,cut,slack].forEach(function(el){el.addEventListener('input',function(){$('saveState').textContent='SAVING…';clearTimeout(timer);timer=setTimeout(function(){save();render()},150)});el.addEventListener('change',function(){save();render()})});
-$('plusBtn').onclick=function(){cut.value=f(n(cut.value)+.1);save();render()};
-$('minusBtn').onclick=function(){cut.value=f(Math.max(0,n(cut.value)-.1));save();render()};
-$('addBtn').onclick=add;$('nextBtn').onclick=add;$('prevBtn').onclick=function(){move(-1)};$('undoBtn').onclick=undo;$('clearBtn').onclick=clearReel;
-$('resetCutBtn').onclick=function(){cut.value='';slack.value='0';save();render();cut.focus()};
-$('exportCsvBtn').onclick=exportCsv;$('exportJsonBtn').onclick=exportJson;
-$('importCsvBtn').onclick=function(){$('csvFile').click()};$('importJsonBtn').onclick=function(){$('jsonFile').click()};
-$('csvFile').onchange=function(e){if(e.target.files[0])importCsv(e.target.files[0]);e.target.value=''};
-$('jsonFile').onchange=function(e){if(e.target.files[0])importJson(e.target.files[0]);e.target.value=''};
-try{
- var d=JSON.parse(localStorage.getItem(KEY)||'null');
- if(d){state.starting=n(d.starting);state.cut=n(d.cut);state.slack=n(d.slack);state.history=Array.isArray(d.history)?d.history.filter(function(r){return r&&n(r.cut)>0}).map(normalizedRecord):[];state.cursor=Number.isInteger(d.cursor)?d.cursor:-1}
-}catch(e){$('storageNote').textContent='Could not read saved data'}
-start.value=state.starting||'';cut.value=state.cut||'';slack.value=state.slack||0;
-state.cursor=state.history.length?Math.max(0,Math.min(state.cursor,state.history.length-1)):-1;
-render();save();
-window.addEventListener('pagehide',save);
-document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')save()});
-})();
-</script>
+<body class="min-h-screen flex flex-col justify-between selection:bg-amber-500 selection:text-slate-950 pb-8 antialiased">
+
+  <!-- Top Navigation Header -->
+  <header class="w-full border-b border-slate-800/60 bg-slate-950/70 backdrop-blur-xl sticky top-0 z-30 transition-all">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-slate-950 shadow-md shadow-amber-500/20 font-black text-base">
+          <i class="fa-solid fa-scissors"></i>
+        </div>
+        <div>
+          <h1 class="font-extrabold text-sm sm:text-base text-white leading-tight tracking-tight flex items-center gap-2">
+            CORD CALCULATOR
+            <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">OFFLINE PWA</span>
+          </h1>
+          <p class="text-[11px] text-slate-400 font-mono">Cut Sequencer & Meter Verification · DAYLIGHT</p>
+        </div>
+      </div>
+
+      <!-- Quick Action Toolbar -->
+      <div class="flex items-center gap-2 sm:gap-2.5">
+        <!-- Install PWA Button -->
+        <button id="btnInstallApp" onclick="installPWA()" class="hidden px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-medium btn-smooth items-center gap-1.5" title="Install Application">
+          <i class="fa-solid fa-download text-amber-400"></i>
+          <span class="hidden md:inline">Install</span>
+        </button>
+
+        <!-- Sound Toggle -->
+        <button onclick="toggleAudio()" id="btnAudioToggle" class="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-amber-400 transition btn-smooth text-xs flex items-center gap-1.5" title="Toggle audio feedback">
+          <i id="soundIcon" class="fa-solid fa-volume-high text-amber-400"></i>
+        </button>
+
+        <!-- Offline/Network Status Badge -->
+        <span id="networkBadge" class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/80 border border-emerald-800/80 text-emerald-400 text-[11px] font-mono">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Ready for Field Use
+        </span>
+
+        <!-- History Button Header -->
+        <button onclick="openHistoryModal()" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-amber-300 font-semibold text-xs btn-smooth flex items-center gap-2 shadow-sm">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          <span class="hidden sm:inline">Log</span>
+          <span id="logCountBadge" class="bg-amber-500 text-slate-950 text-[10px] font-black px-1.5 py-0.2 rounded-full">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-5xl w-full mx-auto px-4 pt-5 space-y-5 flex-1">
+
+    <!-- GREENLIGHT / REDLIGHT STATUS BANNER -->
+    <div id="statusBanner" class="w-full rounded-2xl p-4 sm:p-5 glass-card border border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <!-- Status Indicator Light Bulb -->
+        <div id="statusLight" class="w-12 h-12 rounded-2xl bg-slate-800/80 border border-slate-700/80 flex items-center justify-center text-slate-500 text-xl font-bold transition-all duration-300">
+          <i id="statusIcon" class="fa-solid fa-minus"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span id="statusTitle" class="font-bold text-base sm:text-lg text-slate-300">STANDBY / READY</span>
+            <span id="statusBadge" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-slate-800/80 text-slate-400 border border-slate-700/80">NO CALCULATIONS YET</span>
+          </div>
+          <p id="statusDescription" class="text-xs text-slate-400 mt-0.5">Enter initial parameters below and click <span class="text-amber-400 font-semibold">CALCULATE CUT</span>.</p>
+        </div>
+      </div>
+
+      <!-- Meter Check Verification Display -->
+      <div class="w-full sm:w-auto bg-slate-950/80 px-4 py-2.5 rounded-xl border border-slate-800/80 flex sm:flex-col justify-between items-center sm:items-end font-mono">
+        <span class="text-[11px] text-slate-400 uppercase tracking-wider font-sans">Meter Check Verification</span>
+        <span id="dispMeterCheck" class="text-xl sm:text-2xl font-black text-slate-400">-- m</span>
+      </div>
+    </div>
+
+    <!-- MAIN CALCULATOR & PARAMETERS GRID -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+      <!-- LEFT COLUMN: INPUT PARAMETERS PANEL -->
+      <div class="lg:col-span-7 glass-card rounded-2xl p-5 sm:p-6 space-y-5 border border-slate-800/80">
+        <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
+          <h2 class="font-bold text-slate-200 text-sm sm:text-base flex items-center gap-2">
+            <i class="fa-solid fa-sliders text-amber-400"></i> Cut Parameters
+          </h2>
+          <span id="seqBadge" class="text-[11px] font-mono px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-300 border border-amber-500/20">
+            Cut #1 in Sequence
+          </span>
+        </div>
+
+        <!-- INPUT 1: STARTING REEL MARK (INITIAL CORD VALUE) -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <label for="initialCord" class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+              <span>1. Starting Reel Mark</span>
+              <span class="text-slate-500 font-mono text-[11px]">(Initial Cord Value)</span>
+            </label>
+            <div id="lockStateContainer" class="flex items-center gap-1">
+              <span id="lockBadge" class="text-[10px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700/80">Editable (First Cut)</span>
+              <button id="btnUnlock" onclick="unlockInitialInput()" class="hidden text-xs text-amber-400 hover:text-amber-300 underline font-mono ml-1">Unlock</button>
+            </div>
+          </div>
+          <div class="relative rounded-xl overflow-hidden">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500 font-mono text-sm">
+              <i class="fa-solid fa-drum text-slate-400"></i>
+            </div>
+            <input type="number" step="0.01" id="initialCord" placeholder="e.g. 500" 
+              class="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 pl-10 pr-14 text-lg font-mono font-bold text-slate-100 placeholder-slate-600 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition disabled:opacity-75 disabled:bg-slate-900/80" />
+            <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400 font-mono font-bold text-xs">
+              METER
+            </div>
+          </div>
+          <p class="text-[11px] text-slate-400">Set once for first cut. Sequencer carries forward subsequent cuts automatically.</p>
+        </div>
+
+        <!-- INPUT 2: TARGET END MARK -->
+        <div class="space-y-1.5">
+          <label for="targetCord" class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+            <span>2. Target End Mark</span>
+            <span class="text-slate-500 font-mono text-[11px]">(Target Cord Value)</span>
+          </label>
+          <div class="relative rounded-xl overflow-hidden">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500 font-mono text-sm">
+              <i class="fa-solid fa-flag-checkered text-amber-400"></i>
+            </div>
+            <input type="number" step="0.01" id="targetCord" placeholder="e.g. 150" 
+              class="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 pl-10 pr-14 text-lg font-mono font-bold text-slate-100 placeholder-slate-600 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition" />
+            <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400 font-mono font-bold text-xs">
+              METER
+            </div>
+          </div>
+        </div>
+
+        <!-- INPUT 3: EXTRA METER (SAFETY SLACK) + PRESETS -->
+        <div class="space-y-2">
+          <label for="extraMeter" class="text-xs font-semibold text-slate-300 flex items-center justify-between">
+            <span>3. Safety Slack Length <span class="text-slate-500 font-mono text-[11px]">(Extra Meter)</span></span>
+            <span class="text-amber-400 text-[11px]">Subtracted from Target Mark</span>
+          </label>
+          <div class="relative rounded-xl overflow-hidden">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500 font-mono text-sm">
+              <i class="fa-solid fa-shield-halved text-sky-400"></i>
+            </div>
+            <input type="number" step="0.01" id="extraMeter" placeholder="e.g. 15" value="15" 
+              class="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 pl-10 pr-14 text-lg font-mono font-bold text-slate-100 placeholder-slate-600 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition" />
+            <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400 font-mono font-bold text-xs">
+              METER
+            </div>
+          </div>
+
+          <!-- Quick Presets Buttons (14m, 15m, 18m, 21m) -->
+          <div class="space-y-1.5 pt-1">
+            <span class="text-[11px] text-slate-400 font-medium block"><i class="fa-solid fa-bolt text-amber-400 mr-1"></i> Quick Slack Presets:</span>
+            <div class="grid grid-cols-4 gap-1.5">
+              <button onclick="setExtraMeter(14)" class="py-2 bg-amber-500/10 hover:bg-amber-500/25 text-amber-300 font-bold rounded-xl font-mono text-xs border border-amber-500/30 transition btn-smooth">14m</button>
+              <button onclick="setExtraMeter(15)" class="py-2 bg-amber-500/10 hover:bg-amber-500/25 text-amber-300 font-bold rounded-xl font-mono text-xs border border-amber-500/30 transition btn-smooth">15m</button>
+              <button onclick="setExtraMeter(18)" class="py-2 bg-amber-500/10 hover:bg-amber-500/25 text-amber-300 font-bold rounded-xl font-mono text-xs border border-amber-500/30 transition btn-smooth">18m</button>
+              <button onclick="setExtraMeter(21)" class="py-2 bg-amber-500/10 hover:bg-amber-500/25 text-amber-300 font-bold rounded-xl font-mono text-xs border border-amber-500/30 transition btn-smooth">21m</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACTION TOOLBAR BUTTONS -->
+        <div class="pt-2 space-y-2.5">
+          <!-- Primary Big Calculate Button -->
+          <button id="btnCalculate" onclick="calculateCord()" 
+            class="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-base shadow-lg shadow-amber-500/20 btn-smooth flex items-center justify-center gap-2">
+            <i class="fa-solid fa-calculator text-lg"></i> CALCULATE CUT
+          </button>
+
+          <!-- Secondary Small Action Buttons -->
+          <div class="grid grid-cols-3 gap-2">
+            <button onclick="saveCurrentCut()" id="btnSave" disabled 
+              class="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 font-bold text-xs border border-slate-800 transition btn-smooth flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-bookmark text-amber-400"></i> <span id="btnSaveText">AUTO-SAVED</span>
+            </button>
+            <button onclick="nextCutSequence()" id="btnNext" disabled 
+              class="py-2.5 px-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 disabled:opacity-40 disabled:cursor-not-allowed text-amber-300 font-bold text-xs border border-amber-500/40 transition btn-smooth flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-forward-step text-amber-400"></i> NEXT CUT
+            </button>
+            <button onclick="resetCalculator()" 
+              class="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 font-bold text-xs border border-slate-800 transition btn-smooth flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-rotate text-xs"></i> RESET
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: RESULTS & VISUAL DIAGRAM PANEL -->
+      <div class="lg:col-span-5 flex flex-col gap-4">
+
+        <!-- CUTTING POINT MARK CARD -->
+        <div class="glass-card rounded-2xl p-5 border border-slate-800/80 flex flex-col justify-between relative overflow-hidden">
+          <div class="absolute -right-3 -bottom-3 text-slate-800/20 text-8xl font-black pointer-events-none font-mono selection:bg-transparent">1</div>
+          <div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-400 uppercase tracking-wider font-sans">1. Cutting Point Mark</span>
+              <span class="text-[10px] font-mono text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/20">Target - Extra</span>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1">Mark location on cable reel where physical cut is made.</p>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-baseline justify-between font-mono">
+            <span class="text-xs text-slate-500 font-sans">Cutting Mark =</span>
+            <div id="dispCuttingPoint" class="text-3xl font-black text-amber-400">-- <span class="text-base font-normal text-slate-500">m</span></div>
+          </div>
+        </div>
+
+        <!-- CUT RESULT LENGTH CARD -->
+        <div class="glass-card rounded-2xl p-5 border border-slate-800/80 flex flex-col justify-between relative overflow-hidden">
+          <div class="absolute -right-3 -bottom-3 text-slate-800/20 text-8xl font-black pointer-events-none font-mono selection:bg-transparent">2</div>
+          <div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-400 uppercase tracking-wider font-sans">2. Cut Result Length</span>
+              <span class="text-[10px] font-mono text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded border border-emerald-400/20">Initial - Cutting Pt</span>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1">Harvested cable length removed from initial reel.</p>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-baseline justify-between font-mono">
+            <span class="text-xs text-slate-500 font-sans">Cut Length =</span>
+            <div id="dispResult" class="text-3xl font-black text-emerald-400">-- <span class="text-base font-normal text-slate-500">m</span></div>
+          </div>
+        </div>
+
+        <!-- VISUAL DIAGRAM REPRESENTATION -->
+        <div class="glass-card rounded-2xl p-5 border border-slate-800/80 space-y-3">
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block font-sans">Visual Segment Breakdown</span>
+          
+          <div class="space-y-2 font-mono text-xs">
+            <div class="h-6 w-full bg-slate-950 rounded-lg overflow-hidden flex p-0.5 border border-slate-800 relative">
+              <div id="barCutResult" style="width: 0%;" class="h-full bg-emerald-500 rounded-l transition-all duration-500 ease-out flex items-center justify-center text-[10px] text-slate-950 font-bold overflow-hidden">
+              </div>
+              <div id="barExtra" style="width: 0%;" class="h-full bg-sky-500 transition-all duration-500 ease-out flex items-center justify-center text-[10px] text-slate-950 font-bold overflow-hidden">
+              </div>
+              <div id="barRemaining" style="width: 100%;" class="h-full bg-slate-800/80 rounded-r transition-all duration-500 ease-out flex items-center justify-center text-[10px] text-slate-400 font-bold overflow-hidden">
+                Reel
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 text-[11px] pt-1">
+              <div class="flex items-center gap-1.5 text-emerald-400">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> Cut Segment
+              </div>
+              <div class="flex items-center gap-1.5 text-sky-400 justify-center">
+                <span class="w-2.5 h-2.5 rounded-full bg-sky-500 inline-block"></span> Safety Slack
+              </div>
+              <div class="flex items-center gap-1.5 text-slate-400 justify-end">
+                <span class="w-2.5 h-2.5 rounded-full bg-slate-700 inline-block"></span> Reel Rest
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- VIEW HISTORY LOG MODAL -->
+    <div id="historyModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden animate-fade-in">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-4xl w-full p-5 sm:p-6 shadow-2xl relative max-h-[90vh] flex flex-col animate-slide-up">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-lg">
+              <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+            <div>
+              <h3 class="text-lg font-bold text-white">Cut History Log</h3>
+              <p class="text-xs text-slate-400 font-mono" id="modalLogCountBadge">0 cuts saved</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="exportHistoryCSV()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-mono border border-slate-700 transition btn-smooth flex items-center gap-1.5">
+              <i class="fa-solid fa-file-csv text-emerald-400"></i> Export CSV
+            </button>
+            <button onclick="closeHistoryModal()" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition btn-smooth flex items-center justify-center">
+              <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-y-auto my-4 flex-1">
+          <table class="w-full text-left text-sm text-slate-300">
+            <thead class="text-xs uppercase bg-slate-950/90 text-slate-400 font-mono border-b border-slate-800 sticky top-0">
+              <tr>
+                <th class="py-3 px-3">Cut #</th>
+                <th class="py-3 px-3">Time</th>
+                <th class="py-3 px-3 text-right">Initial Cord (m)</th>
+                <th class="py-3 px-3 text-right">Target End (m)</th>
+                <th class="py-3 px-3 text-right">Extra Meter (m)</th>
+                <th class="py-3 px-3 text-right text-amber-300">Cutting Pt (m)</th>
+                <th class="py-3 px-3 text-right text-emerald-300">Cut Result (m)</th>
+                <th class="py-3 px-3 text-center">Status</th>
+                <th class="py-3 px-3 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody id="modalHistoryTableBody" class="divide-y divide-slate-800/60 font-mono text-xs">
+              <tr>
+                <td colspan="9" class="py-8 text-center text-slate-500 font-sans">No cuts saved yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pt-3 border-t border-slate-800 flex justify-between items-center">
+          <button onclick="clearHistoryLog()" class="px-3.5 py-2 rounded-xl bg-red-950/40 hover:bg-red-900/60 text-red-300 text-xs font-sans border border-red-800/60 transition btn-smooth flex items-center gap-1.5">
+            <i class="fa-solid fa-trash-can"></i> Clear History
+          </button>
+          <button onclick="closeHistoryModal()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition btn-smooth">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CUT DETAILS INSPECTION MODAL -->
+    <div id="detailModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden animate-fade-in">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative animate-slide-up">
+        <button onclick="closeDetailModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg p-1 btn-smooth">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center text-slate-950 font-bold text-lg shadow-md">
+            <i class="fa-solid fa-ruler-combined"></i>
+          </div>
+          <div>
+            <h3 id="detailCutTitle" class="text-lg font-bold text-white">Cut Details #1</h3>
+            <p id="detailTimestamp" class="text-xs text-slate-400 font-mono">Recorded at --</p>
+          </div>
+        </div>
+
+        <div class="space-y-3 text-sm text-slate-300">
+          <div class="grid grid-cols-2 gap-2 bg-slate-950 p-3.5 rounded-xl border border-slate-800 font-mono text-xs">
+            <div class="col-span-2 border-b border-slate-800/80 pb-2 flex justify-between items-center">
+              <span class="text-slate-500 uppercase font-sans text-[10px]">Verification Status</span>
+              <span id="detailVerification" class="font-bold text-emerald-400">PASS</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block text-[10px] uppercase font-sans">Starting Reel Mark</span>
+              <span id="detailInitial" class="font-bold text-slate-200">0 m</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block text-[10px] uppercase font-sans">Target End Mark</span>
+              <span id="detailTarget" class="font-bold text-amber-300">0 m</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block text-[10px] uppercase font-sans">Safety Slack</span>
+              <span id="detailExtra" class="font-bold text-sky-300">0 m</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block text-[10px] uppercase font-sans">Cutting Point</span>
+              <span id="detailCuttingPoint" class="font-bold text-amber-400">0 m</span>
+            </div>
+            <div class="col-span-2 pt-2 border-t border-slate-800 flex justify-between items-center">
+              <span class="text-slate-500 text-[10px] uppercase font-sans">Cut Length Harvested</span>
+              <span id="detailResult" class="font-bold text-emerald-400 text-sm">0 m</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 flex gap-3">
+          <button onclick="loadDetailToCalculator()" class="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition btn-smooth flex items-center justify-center gap-2">
+            <i class="fa-solid fa-arrow-right-to-bracket"></i> Load into Calculator
+          </button>
+          <button onclick="closeDetailModal()" class="py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition btn-smooth">
+            Dismiss
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  </main>
+
+  <script>
+    // Application State
+    let currentCalculation = null;
+    let initialCordLocked = false;
+    let sequenceIndex = 1;
+    let savedCutHistory = [];
+    let isSoundEnabled = true;
+    let activeDetailIndex = null;
+    let deferredPwaPrompt = null;
+
+    // Initialize application state & register Service Worker
+    window.addEventListener('DOMContentLoaded', () => {
+      loadLocalStorageData();
+      checkNetworkStatus();
+      registerOfflineServiceWorker();
+
+      // PWA Install Prompt Listener
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPwaPrompt = e;
+        const installBtn = document.getElementById('btnInstallApp');
+        if (installBtn) installBtn.classList.remove('hidden');
+      });
+
+      // Keyboard shortcut for quick calculation
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.target.matches('button')) {
+          calculateCord();
+        }
+      });
+    });
+
+    function installPWA() {
+      if (!deferredPwaPrompt) return;
+      deferredPwaPrompt.prompt();
+      deferredPwaPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          showToast('App installed successfully!', 'success');
+        }
+        deferredPwaPrompt = null;
+        document.getElementById('btnInstallApp').classList.add('hidden');
+      });
+    }
+
+    function loadLocalStorageData() {
+      try {
+        const savedHistory = localStorage.getItem('cord_calc_history');
+        if (savedHistory) {
+          savedCutHistory = JSON.parse(savedHistory);
+          renderHistoryTable();
+        }
+        const savedSound = localStorage.getItem('cord_calc_sound');
+        if (savedSound !== null) {
+          isSoundEnabled = savedSound === 'true';
+          const soundIcon = document.getElementById('soundIcon');
+          if (!isSoundEnabled && soundIcon) {
+            soundIcon.className = 'fa-solid fa-volume-xmark text-slate-500';
+          }
+        }
+      } catch (e) {
+        console.warn('Error loading localStorage data:', e);
+      }
+    }
+
+    // Web Audio Synthesizer (Works 100% offline without sound files)
+    function playSound(type) {
+      if (!isSoundEnabled) return;
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        if (type === 'pass') {
+          osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15);
+          gain.gain.setValueAtTime(0.12, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.2);
+        } else if (type === 'fail') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(220, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(110, ctx.currentTime + 0.25);
+          gain.gain.setValueAtTime(0.15, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.3);
+        } else if (type === 'click') {
+          osc.frequency.setValueAtTime(600, ctx.currentTime);
+          gain.gain.setValueAtTime(0.04, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.05);
+        }
+      } catch(e) {}
+    }
+
+    function toggleAudio() {
+      isSoundEnabled = !isSoundEnabled;
+      localStorage.setItem('cord_calc_sound', isSoundEnabled);
+      const soundIcon = document.getElementById('soundIcon');
+      if (isSoundEnabled) {
+        if (soundIcon) soundIcon.className = 'fa-solid fa-volume-high text-amber-400';
+        playSound('pass');
+        showToast('Sound feedback enabled', 'info');
+      } else {
+        if (soundIcon) soundIcon.className = 'fa-solid fa-volume-xmark text-slate-500';
+        showToast('Sound muted', 'info');
+      }
+    }
+
+    function setExtraMeter(val) {
+      playSound('click');
+      document.getElementById('extraMeter').value = val;
+    }
+
+    function calculateCord() {
+      playSound('click');
+
+      const initialInput = document.getElementById('initialCord');
+      const targetInput = document.getElementById('targetCord');
+      const extraInput = document.getElementById('extraMeter');
+
+      const initial = parseFloat(initialInput.value);
+      const target = parseFloat(targetInput.value);
+      const extra = parseFloat(extraInput.value) || 0;
+
+      // Input Validation
+      if (isNaN(initial) || isNaN(target)) {
+        showToast('Please enter valid numerical values.', 'error');
+        updateStatusDisplay('error', 'INVALID INPUT', 'Please fill in both Starting Reel Mark and Target End Mark.');
+        return;
+      }
+
+      // Formula calculations:
+      const cuttingPoint = target - extra;
+      const result = initial - cuttingPoint;
+      const meterCheck = target - cuttingPoint;
+
+      const cpRounded = Math.round(cuttingPoint * 100) / 100;
+      const resRounded = Math.round(result * 100) / 100;
+      const mcRounded = Math.round(meterCheck * 100) / 100;
+      const extraRounded = Math.round(extra * 100) / 100;
+
+      // GREENLIGHT validation rule
+      const isValid = (mcRounded === extraRounded) && (cpRounded >= 0) && (resRounded >= 0);
+
+      currentCalculation = {
+        initial: initial,
+        target: target,
+        extra: extra,
+        cuttingPoint: cpRounded,
+        result: resRounded,
+        meterCheck: mcRounded,
+        isValid: isValid,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+      };
+
+      // Screen updates
+      document.getElementById('dispCuttingPoint').innerHTML = `${cpRounded} <span class="text-base font-normal text-slate-500">m</span>`;
+      document.getElementById('dispResult').innerHTML = `${resRounded} <span class="text-base font-normal text-slate-500">m</span>`;
+      document.getElementById('dispMeterCheck').textContent = `${mcRounded} m`;
+
+      lockInitialInput();
+
+      document.getElementById('btnSave').disabled = false;
+      document.getElementById('btnNext').disabled = false;
+
+      updateVisualBar(initial, resRounded, extra);
+
+      if (isValid) {
+        playSound('pass');
+        updateStatusDisplay('pass', 'GREENLIGHT PASS', `Meter Check (${mcRounded}m) matches Safety Slack (${extraRounded}m). Cut verified.`);
+      } else {
+        playSound('fail');
+        let reason = `Meter Check (${mcRounded}m) does not equal Safety Slack (${extraRounded}m).`;
+        if (cpRounded < 0) reason = 'Cutting point is negative (Target mark is smaller than safety slack).';
+        if (resRounded < 0) reason = 'Cut length exceeds starting reel mark length.';
+        updateStatusDisplay('fail', 'REDLIGHT FAIL', reason);
+      }
+
+      autoSaveCut();
+    }
+
+    function autoSaveCut() {
+      if (!currentCalculation) return;
+
+      savedCutHistory.unshift({ ...currentCalculation });
+      saveCutHistoryToStorage();
+      renderHistoryTable();
+
+      document.getElementById('btnSave').disabled = true;
+      document.getElementById('btnSaveText').textContent = 'AUTO-SAVED';
+      showToast('Cut result auto-saved to history log!', 'success');
+    }
+
+    function saveCurrentCut() {
+      if (!currentCalculation) return;
+      autoSaveCut();
+    }
+
+    function updateStatusDisplay(type, title, description) {
+      const banner = document.getElementById('statusBanner');
+      const light = document.getElementById('statusLight');
+      const icon = document.getElementById('statusIcon');
+      const titleEl = document.getElementById('statusTitle');
+      const badgeEl = document.getElementById('statusBadge');
+      const descEl = document.getElementById('statusDescription');
+      const meterCheckDisp = document.getElementById('dispMeterCheck');
+
+      banner.className = "w-full rounded-2xl p-4 sm:p-5 glass-card border transition-all duration-300 flex flex-col sm:flex-row items-center justify-between gap-4 ";
+
+      if (type === 'pass') {
+        banner.classList.add('border-emerald-500/50', 'bg-emerald-950/20', 'glow-green');
+        light.className = "w-12 h-12 rounded-2xl bg-emerald-500 border border-emerald-300 flex items-center justify-center text-slate-950 text-xl font-bold shadow-lg shadow-emerald-500/30";
+        icon.className = "fa-solid fa-check";
+        titleEl.textContent = title;
+        titleEl.className = "font-extrabold text-base sm:text-lg text-emerald-400";
+        badgeEl.textContent = "VERIFIED PASS";
+        badgeEl.className = "text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
+        meterCheckDisp.className = "text-xl sm:text-2xl font-black text-emerald-400";
+      } else if (type === 'fail' || type === 'error') {
+        banner.classList.add('border-red-500/50', 'bg-red-950/20', 'glow-red');
+        light.className = "w-12 h-12 rounded-2xl bg-red-500 border border-red-300 flex items-center justify-center text-slate-950 text-xl font-bold shadow-lg shadow-red-500/30";
+        icon.className = "fa-solid fa-xmark";
+        titleEl.textContent = title;
+        titleEl.className = "font-extrabold text-base sm:text-lg text-red-400";
+        badgeEl.textContent = "VERIFICATION ERROR";
+        badgeEl.className = "text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-red-500/20 text-red-300 border border-red-500/40";
+        meterCheckDisp.className = "text-xl sm:text-2xl font-black text-red-400";
+      }
+
+      descEl.textContent = description;
+    }
+
+    function updateVisualBar(initial, result, extra) {
+      if (!initial || initial <= 0) return;
+      
+      const pctResult = Math.min(100, Math.max(0, (result / initial) * 100));
+      const pctExtra = Math.min(100 - pctResult, Math.max(0, (extra / initial) * 100));
+      const pctRemaining = Math.max(0, 100 - pctResult - pctExtra);
+
+      const barResult = document.getElementById('barCutResult');
+      const barExtra = document.getElementById('barExtra');
+      const barRemaining = document.getElementById('barRemaining');
+
+      barResult.style.width = `${pctResult}%`;
+      barResult.textContent = pctResult > 10 ? `${Math.round(result)}m` : '';
+
+      barExtra.style.width = `${pctExtra}%`;
+      barExtra.textContent = pctExtra > 8 ? `${Math.round(extra)}m` : '';
+
+      barRemaining.style.width = `${pctRemaining}%`;
+      barRemaining.textContent = pctRemaining > 15 ? 'Rest' : '';
+    }
+
+    function lockInitialInput() {
+      initialCordLocked = true;
+      const initialInput = document.getElementById('initialCord');
+      initialInput.disabled = true;
+
+      const badge = document.getElementById('lockBadge');
+      badge.textContent = 'Locked (Sequence Active)';
+      badge.className = 'text-[10px] font-mono text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/30';
+
+      document.getElementById('btnUnlock').classList.remove('hidden');
+    }
+
+    function unlockInitialInput() {
+      playSound('click');
+      initialCordLocked = false;
+      const initialInput = document.getElementById('initialCord');
+      initialInput.disabled = false;
+
+      const badge = document.getElementById('lockBadge');
+      badge.textContent = 'Editable (First Cut)';
+      badge.className = 'text-[10px] font-mono text-slate-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-700';
+
+      document.getElementById('btnUnlock').classList.add('hidden');
+      showToast('Starting mark input unlocked.', 'info');
+    }
+
+    function nextCutSequence() {
+      if (!currentCalculation) return;
+      playSound('click');
+
+      const nextInitial = currentCalculation.cuttingPoint;
+
+      sequenceIndex++;
+      document.getElementById('seqBadge').textContent = `Cut #${sequenceIndex} in Sequence`;
+
+      const initialInput = document.getElementById('initialCord');
+      initialInput.value = nextInitial;
+
+      document.getElementById('targetCord').value = '';
+      document.getElementById('targetCord').focus();
+
+      document.getElementById('dispCuttingPoint').innerHTML = `-- <span class="text-base font-normal text-slate-500">m</span>`;
+      document.getElementById('dispResult').innerHTML = `-- <span class="text-base font-normal text-slate-500">m</span>`;
+      document.getElementById('dispMeterCheck').textContent = `-- m`;
+
+      const banner = document.getElementById('statusBanner');
+      banner.className = "w-full rounded-2xl p-4 sm:p-5 glass-card border border-slate-800/80 transition-all duration-300 flex flex-col sm:flex-row items-center justify-between gap-4";
+      document.getElementById('statusLight').className = "w-12 h-12 rounded-2xl bg-slate-800/80 border border-slate-700/80 flex items-center justify-center text-slate-500 text-xl font-bold";
+      document.getElementById('statusIcon').className = "fa-solid fa-minus";
+      document.getElementById('statusTitle').textContent = "READY FOR NEXT CUT";
+      document.getElementById('statusTitle').className = "font-bold text-base sm:text-lg text-slate-300";
+      document.getElementById('statusBadge').textContent = `INITIAL = ${nextInitial}m`;
+      document.getElementById('statusBadge').className = "text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-slate-800 text-amber-400 border border-slate-700";
+      document.getElementById('statusDescription').textContent = `Starting Reel Mark set to ${nextInitial}m (Cutting Point of previous cut). Enter new Target End Mark.`;
+
+      document.getElementById('btnSave').disabled = true;
+      document.getElementById('btnNext').disabled = true;
+      currentCalculation = null;
+
+      showToast(`Carried forward ${nextInitial}m to next cut.`, 'info');
+    }
+
+    function resetCalculator() {
+      playSound('click');
+      unlockInitialInput();
+
+      document.getElementById('initialCord').value = '';
+      document.getElementById('targetCord').value = '';
+      document.getElementById('extraMeter').value = '15';
+
+      document.getElementById('dispCuttingPoint').innerHTML = `-- <span class="text-base font-normal text-slate-500">m</span>`;
+      document.getElementById('dispResult').innerHTML = `-- <span class="text-base font-normal text-slate-500">m</span>`;
+      document.getElementById('dispMeterCheck').textContent = `-- m`;
+
+      sequenceIndex = 1;
+      document.getElementById('seqBadge').textContent = `Cut #1 in Sequence`;
+
+      const banner = document.getElementById('statusBanner');
+      banner.className = "w-full rounded-2xl p-4 sm:p-5 glass-card border border-slate-800/80 transition-all duration-300 flex flex-col sm:flex-row items-center justify-between gap-4";
+      document.getElementById('statusLight').className = "w-12 h-12 rounded-2xl bg-slate-800/80 border border-slate-700/80 flex items-center justify-center text-slate-500 text-xl font-bold";
+      document.getElementById('statusIcon').className = "fa-solid fa-minus";
+      document.getElementById('statusTitle').textContent = "STANDBY / READY";
+      document.getElementById('statusTitle').className = "font-bold text-base sm:text-lg text-slate-300";
+      document.getElementById('statusBadge').textContent = "NO CALCULATIONS YET";
+      document.getElementById('statusBadge').className = "text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-slate-800 text-slate-400 border border-slate-700";
+      document.getElementById('statusDescription').innerHTML = `Enter initial parameters below and click <span class="text-amber-400 font-semibold">CALCULATE CUT</span>.`;
+
+      document.getElementById('btnSave').disabled = true;
+      document.getElementById('btnNext').disabled = true;
+      currentCalculation = null;
+
+      updateVisualBar(100, 0, 0);
+      showToast('Calculator reset to initial state.', 'info');
+    }
+
+    function renderHistoryTable() {
+      const modalTbody = document.getElementById('modalHistoryTableBody');
+      const countBadge = document.getElementById('logCountBadge');
+      const modalCountBadge = document.getElementById('modalLogCountBadge');
+
+      const countText = `${savedCutHistory.length} cut${savedCutHistory.length === 1 ? '' : 's'} saved`;
+      if (countBadge) countBadge.textContent = savedCutHistory.length;
+      if (modalCountBadge) modalCountBadge.textContent = countText;
+
+      if (savedCutHistory.length === 0) {
+        const emptyHtml = `
+          <tr id="emptyRow">
+            <td colspan="9" class="py-8 text-center text-slate-500 font-sans">
+              <i class="fa-solid fa-box-open text-2xl mb-2 block text-slate-600"></i>
+              No cuts saved yet. Calculations will automatically record here.
+            </td>
+          </tr>
+        `;
+        if (modalTbody) modalTbody.innerHTML = emptyHtml;
+        return;
+      }
+
+      const rowsHtml = savedCutHistory.map((item, idx) => {
+        return `
+        <tr class="hover:bg-slate-800/40 transition">
+          <td class="py-3 px-3 text-slate-500 font-bold">#${savedCutHistory.length - idx}</td>
+          <td class="py-3 px-3 text-slate-400 font-sans text-[11px]">${item.timestamp}</td>
+          <td class="py-3 px-3 text-right font-bold text-slate-200">${item.initial}</td>
+          <td class="py-3 px-3 text-right font-bold text-amber-300">${item.target}</td>
+          <td class="py-3 px-3 text-right font-bold text-sky-300">${item.extra}</td>
+          <td class="py-3 px-3 text-right font-bold text-amber-400">${item.cuttingPoint}</td>
+          <td class="py-3 px-3 text-right font-bold text-emerald-400">${item.result}</td>
+          <td class="py-3 px-3 text-center">
+            ${item.isValid 
+              ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800 text-[10px] font-sans font-bold"><i class="fa-solid fa-check text-emerald-400"></i> PASS</span>`
+              : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-950 text-red-300 border border-red-800 text-[10px] font-sans font-bold"><i class="fa-solid fa-xmark text-red-400"></i> FAIL</span>`
+            }
+          </td>
+          <td class="py-3 px-3 text-center">
+            <button onclick="openDetailModal(${idx})" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-400 hover:text-sky-300 transition btn-smooth" title="View details">
+              <i class="fa-solid fa-eye text-xs"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+      }).join('');
+
+      if (modalTbody) modalTbody.innerHTML = rowsHtml;
+    }
+
+    function openHistoryModal() {
+      playSound('click');
+      renderHistoryTable();
+      document.getElementById('historyModal').classList.remove('hidden');
+    }
+
+    function closeHistoryModal() {
+      playSound('click');
+      document.getElementById('historyModal').classList.add('hidden');
+    }
+
+    function openDetailModal(idx) {
+      playSound('click');
+      activeDetailIndex = idx;
+      const item = savedCutHistory[idx];
+      if (!item) return;
+
+      document.getElementById('detailCutTitle').textContent = `Cut Details #${savedCutHistory.length - idx}`;
+      document.getElementById('detailTimestamp').textContent = `Recorded at ${item.timestamp}`;
+      document.getElementById('detailInitial').textContent = item.initial + ' m';
+      document.getElementById('detailTarget').textContent = item.target + ' m';
+      document.getElementById('detailExtra').textContent = item.extra + ' m';
+      document.getElementById('detailCuttingPoint').textContent = item.cuttingPoint + ' m';
+      document.getElementById('detailResult').textContent = item.result + ' m';
+
+      const verifyEl = document.getElementById('detailVerification');
+      if (item.isValid) {
+        verifyEl.textContent = 'PASS (GREENLIGHT)';
+        verifyEl.className = 'font-bold text-emerald-400';
+      } else {
+        verifyEl.textContent = 'FAIL (REDLIGHT)';
+        verifyEl.className = 'font-bold text-red-400';
+      }
+
+      document.getElementById('detailModal').classList.remove('hidden');
+    }
+
+    function closeDetailModal() {
+      playSound('click');
+      document.getElementById('detailModal').classList.add('hidden');
+    }
+
+    function loadDetailToCalculator() {
+      if (activeDetailIndex === null) return;
+      const item = savedCutHistory[activeDetailIndex];
+      if (!item) return;
+
+      unlockInitialInput();
+      document.getElementById('initialCord').value = item.initial;
+      document.getElementById('targetCord').value = item.target;
+      document.getElementById('extraMeter').value = item.extra;
+
+      calculateCord();
+      closeDetailModal();
+      closeHistoryModal();
+      showToast('Loaded history item into calculator', 'info');
+    }
+
+    function clearHistoryLog() {
+      if (savedCutHistory.length === 0) return;
+      playSound('click');
+      savedCutHistory = [];
+      saveCutHistoryToStorage();
+      renderHistoryTable();
+      showToast('History log cleared.', 'info');
+    }
+
+    function saveCutHistoryToStorage() {
+      try {
+        localStorage.setItem('cord_calc_history', JSON.stringify(savedCutHistory));
+      } catch (e) {
+        console.warn('LocalStorage save error:', e);
+      }
+    }
+
+    function exportHistoryCSV() {
+      if (savedCutHistory.length === 0) {
+        showToast('No cut history to export.', 'error');
+        return;
+      }
+
+      playSound('click');
+
+      let csv = 'Cut Index,Timestamp,Starting Mark (m),Target Mark (m),Safety Slack (m),Cutting Point (m),Cut Result (m),Meter Check Status\n';
+      savedCutHistory.forEach((row, i) => {
+        csv += `${savedCutHistory.length - i},${row.timestamp},${row.initial},${row.target},${row.extra},${row.cuttingPoint},${row.result},${row.isValid ? 'PASS' : 'FAIL'}\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.setAttribute('href', url);
+      a.setAttribute('download', `cord_cut_history_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      showToast('CSV Export generated!', 'success');
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `px-4 py-2.5 rounded-xl text-xs font-semibold shadow-xl border backdrop-blur-md transition-all duration-300 transform translate-y-2 opacity-0 flex items-center gap-2 pointer-events-auto ${
+        type === 'success' ? 'bg-emerald-950/90 text-emerald-200 border-emerald-800' :
+        type === 'error' ? 'bg-red-950/90 text-red-200 border-red-800' :
+        'bg-slate-900/90 text-slate-200 border-slate-700'
+      }`;
+
+      const icon = type === 'success' ? 'fa-check-circle text-emerald-400' :
+                   type === 'error' ? 'fa-exclamation-circle text-red-400' :
+                   'fa-info-circle text-amber-400';
+
+      toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${message}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      }, 10);
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 2500);
+    }
+
+    function checkNetworkStatus() {
+      const badge = document.getElementById('networkBadge');
+      if (!badge) return;
+
+      const updateStatus = () => {
+        if (navigator.onLine) {
+          badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Online`;
+          badge.className = "hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/80 border border-emerald-800/80 text-emerald-400 text-[11px] font-mono";
+        } else {
+          badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400"></span> Working Offline`;
+          badge.className = "hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-950/80 border border-amber-800/80 text-amber-400 text-[11px] font-mono";
+        }
+      };
+
+      updateStatus();
+      window.addEventListener('online', updateStatus);
+      window.addEventListener('offline', updateStatus);
+    }
+
+    // Comprehensive Service Worker with Stale-While-Revalidate Caching for complete offline functionality
+    function registerOfflineServiceWorker() {
+      if ('serviceWorker' in navigator) {
+        const swScript = `
+          const CACHE_NAME = 'cord-calc-offline-v4';
+          const STATIC_ASSETS = [
+            './',
+            'index.html',
+            'https://cdn.tailwindcss.com',
+            'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
+            'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap'
+          ];
+
+          self.addEventListener('install', (event) => {
+            event.waitUntil(
+              caches.open(CACHE_NAME).then((cache) => {
+                return Promise.allSettled(
+                  STATIC_ASSETS.map((url) => {
+                    return fetch(url, { mode: 'no-cors' })
+                      .then((response) => cache.put(url, response))
+                      .catch((err) => console.warn('Cache fetch failed for:', url));
+                  })
+                );
+              }).then(() => self.skipWaiting())
+            );
+          });
+
+          self.addEventListener('activate', (event) => {
+            event.waitUntil(
+              caches.keys().then((keys) => {
+                return Promise.all(
+                  keys.map((key) => {
+                    if (key !== CACHE_NAME) return caches.delete(key);
+                  })
+                );
+              }).then(() => self.clients.claim())
+            );
+          });
+
+          self.addEventListener('fetch', (event) => {
+            if (event.request.method !== 'GET') return;
+
+            event.respondWith(
+              caches.match(event.request).then((cachedResponse) => {
+                if (cachedResponse) {
+                  // Stale-While-Revalidate background update
+                  fetch(event.request)
+                    .then((networkResponse) => {
+                      if (networkResponse && networkResponse.status === 200) {
+                        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse));
+                      }
+                    })
+                    .catch(() => {});
+                  return cachedResponse;
+                }
+
+                return fetch(event.request).then((networkResponse) => {
+                  if (networkResponse && (networkResponse.status === 200 || networkResponse.type === 'opaque')) {
+                    const responseToCache = networkResponse.clone();
+                    caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+                  }
+                  return networkResponse;
+                }).catch(() => {
+                  if (event.request.mode === 'navigate') {
+                    return caches.match('./') || caches.match('index.html');
+                  }
+                });
+              })
+            );
+          });
+        `;
+
+        try {
+          const blob = new Blob([swScript], { type: 'application/javascript' });
+          const swUrl = URL.createObjectURL(blob);
+          navigator.serviceWorker.register(swUrl).catch((err) => {
+            console.warn('SW Blob registration info:', err);
+          });
+        } catch(e) {
+          console.warn('SW initialization error:', e);
+        }
+      }
+    }
+  </script>
 </body>
 </html>
