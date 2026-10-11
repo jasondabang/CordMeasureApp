@@ -1352,12 +1352,18 @@
     window.addEventListener('DOMContentLoaded', () => {
       loadLocalStorageData();
       restoreCalculatorDraft();
-      ['initialCord', 'targetCord', 'extraMeter'].forEach((id) => {
+      ['initialCord', 'targetCord', 'extraMeter', 'totalCordLength'].forEach((id) => {
         const field = document.getElementById(id);
         if (field) {
           field.addEventListener('input', saveCalculatorDraft);
           field.addEventListener('change', saveCalculatorDraft);
+          field.addEventListener('blur', saveCalculatorDraft);
         }
+      });
+      // Save drafts when the app is backgrounded or closed on mobile.
+      window.addEventListener('pagehide', saveCalculatorDraft);
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') saveCalculatorDraft();
       });
       checkNetworkStatus();
       registerOfflineServiceWorker();
@@ -1474,6 +1480,8 @@
           document.getElementById('dispRemaining').innerHTML = `${c.cuttingPoint} <span class="text-base font-normal text-slate-500">m</span>`;
           document.getElementById('dispMeterCheck').textContent = `${c.meterCheck} m`;
           document.getElementById('btnSave').disabled = true;
+          const restoredNextButton = document.getElementById('btnNextCut');
+          if (restoredNextButton) restoredNextButton.disabled = false;
           
           updateVisualBar(c.initial, c.result, c.extra);
           if (c.isValid) updateStatusDisplay('pass', 'GREENLIGHT PASS', `Meter Check (${c.meterCheck}m) matches Safety Slack (${c.extra}m). Cut verified.`);
@@ -1483,6 +1491,13 @@
         console.warn('Could not restore calculator draft:', e);
       }
     }
+
+    // Defensive autosave fallback: keep input drafts saved even if a field is rebuilt later.
+    document.addEventListener('input', (event) => {
+      if (event.target && ['initialCord','targetCord','extraMeter','totalCordLength'].includes(event.target.id)) {
+        try { saveCalculatorDraft(); } catch (e) { console.warn('Autosave fallback failed:', e); }
+      }
+    }, true);
 
     // Web Audio Synthesizer (Works 100% offline without sound files)
     function playSound(type) {
@@ -1670,7 +1685,10 @@
 
       autoSaveCut();
       const nextCutButton = document.getElementById('btnNextCut');
-      if (nextCutButton) nextCutButton.disabled = !currentCalculation;
+      if (nextCutButton) {
+        nextCutButton.disabled = false;
+        nextCutButton.removeAttribute('disabled');
+      }
       saveCalculatorDraft();
     }
 
@@ -1926,10 +1944,16 @@
     }
 
     function nextCutSequence() {
-      if (!currentCalculation) return;
+      if (!currentCalculation) {
+        showToast('Calculate a cut first, then tap NEXT CUT.', 'error');
+        return;
+      }
+      // Ensure the finished cut and current draft are committed before advancing.
+      saveCutHistoryToStorage();
+      saveCalculatorDraft();
       playSound('click');
 
-      const nextInitial = currentCalculation.cuttingPoint;
+      const nextInitial = Number(currentCalculation.cuttingPoint);
 
       sequenceIndex++;
       document.getElementById('seqBadge').textContent = `Cut #${sequenceIndex} in Sequence`;
