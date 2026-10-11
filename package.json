@@ -1,0 +1,18 @@
+{
+  "name": "simple-cord-length-calculator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Android-ready Capacitor wrapper for Simple Cord Length Calculator, Developed by จาตูไหม่",
+  "scripts": {
+    "sync:android": "cap sync android",
+    "open:android": "cap open android",
+    "build:web": "echo Static web assets are in www/"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/core": "^7.4.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.3"
+  }
+}
