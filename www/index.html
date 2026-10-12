@@ -461,6 +461,48 @@
     }
   </style>
 
+
+  <style id="cordmate-ui-refresh">
+    :root { color-scheme: light; }
+    body { background: #f3f6fa !important; }
+    main { max-width: 960px !important; }
+    .glass-card, main > div, #historyModal > div, #detailModal > div {
+      border-radius: 22px !important;
+    }
+    input[type="number"], input[type="text"], select {
+      min-height: 62px !important;
+      font-size: 1.2rem !important;
+      border-radius: 14px !important;
+    }
+    button, [role="button"] {
+      min-height: 48px;
+      font-size: 0.92rem;
+      border-radius: 13px;
+      touch-action: manipulation;
+    }
+    #btnCalculate {
+      min-height: 68px !important;
+      font-size: 1.12rem !important;
+      letter-spacing: .025em;
+      border-radius: 16px !important;
+    }
+    [data-slack-preset], button[onclick^="setExtraMeter"] {
+      min-height: 54px !important;
+      font-size: 1rem !important;
+    }
+    #historyModal button { min-height: 44px; }
+    table th, table td { padding-top: .8rem !important; padding-bottom: .8rem !important; }
+    button:focus-visible, input:focus-visible {
+      outline: 3px solid #0284c7 !important;
+      outline-offset: 2px;
+    }
+    @media (max-width: 640px) {
+      main { padding-left: 14px !important; padding-right: 14px !important; }
+      input[type="number"], input[type="text"], select { min-height: 64px !important; }
+      #btnCalculate { min-height: 70px !important; }
+    }
+  </style>
+
 </head>
 <body class="min-h-screen flex flex-col justify-between selection:bg-amber-500 selection:text-slate-950 pb-8 antialiased">
 
@@ -726,8 +768,15 @@
               <p class="text-xs text-slate-400 font-mono" id="modalLogCountBadge">0 cuts saved</p>
             </div>
           </div>
-          <div class="flex items-center gap-2">
-            <button onclick="exportHistoryCSV()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-mono border border-slate-700 transition btn-smooth flex items-center gap-1.5">
+          <div class="flex items-center gap-2 flex-wrap justify-end">
+            <input id="allDataImportInput" type="file" accept=".json,application/json" class="hidden" onchange="importAllCordMateData(event)">
+            <button onclick="exportAllCordMateData()" class="px-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-sm font-semibold border border-emerald-600 transition btn-smooth flex items-center gap-2">
+              <i class="fa-solid fa-download"></i> Backup All
+            </button>
+            <button onclick="document.getElementById('allDataImportInput').click()" class="px-3 py-2 rounded-xl bg-sky-700 hover:bg-sky-600 text-white text-sm font-semibold border border-sky-600 transition btn-smooth flex items-center gap-2">
+              <i class="fa-solid fa-upload"></i> Restore All
+            </button>
+            <button onclick="exportHistoryCSV()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-semibold border border-slate-700 transition btn-smooth flex items-center gap-1.5">
               <i class="fa-solid fa-file-csv text-emerald-400"></i> Export CSV
             </button>
             <button onclick="closeHistoryModal()" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition btn-smooth flex items-center justify-center">
@@ -845,6 +894,16 @@
     // Initialize application state & register Service Worker
     window.addEventListener('DOMContentLoaded', () => {
       loadLocalStorageData();
+      restoreCordMateDraft();
+      ['initialCord', 'targetCord', 'extraMeter'].forEach(id => {
+        const field = document.getElementById(id);
+        if (field) {
+          field.addEventListener('input', saveCordMateDraft);
+          field.addEventListener('change', saveCordMateDraft);
+        }
+      });
+      window.addEventListener('pagehide', saveCordMateDraft);
+      window.addEventListener('beforeunload', saveCordMateDraft);
       checkNetworkStatus();
       registerOfflineServiceWorker();
 
@@ -1333,6 +1392,150 @@
       document.body.removeChild(a);
 
       showToast('CSV Export generated!', 'success');
+    }
+
+
+    // Persist the unfinished calculator so work resumes after closing/reopening.
+    function saveCordMateDraft() {
+      try {
+        localStorage.setItem('cord_calc_draft', JSON.stringify({
+          initialCord: document.getElementById('initialCord')?.value ?? '',
+          targetCord: document.getElementById('targetCord')?.value ?? '',
+          extraMeter: document.getElementById('extraMeter')?.value ?? '15',
+          sequenceIndex,
+          initialCordLocked,
+          currentCalculation
+        }));
+      } catch (error) {
+        console.warn('Could not save CordMate draft:', error);
+      }
+    }
+
+    function restoreCordMateDraft() {
+      try {
+        const raw = localStorage.getItem('cord_calc_draft');
+        if (!raw) return;
+        const draft = JSON.parse(raw);
+        const initial = document.getElementById('initialCord');
+        const target = document.getElementById('targetCord');
+        const extra = document.getElementById('extraMeter');
+        if (draft.initialCord !== undefined) initial.value = draft.initialCord;
+        if (draft.targetCord !== undefined) target.value = draft.targetCord;
+        if (draft.extraMeter !== undefined) extra.value = draft.extraMeter;
+        if (Number.isFinite(Number(draft.sequenceIndex)) && Number(draft.sequenceIndex) > 0) {
+          sequenceIndex = Number(draft.sequenceIndex);
+        }
+        initialCordLocked = Boolean(draft.initialCordLocked);
+        initial.disabled = initialCordLocked;
+        currentCalculation = draft.currentCalculation || null;
+
+        const badge = document.getElementById('seqBadge');
+        if (badge) badge.textContent = `Cut #${sequenceIndex} in Sequence`;
+
+        const lockBadge = document.getElementById('lockBadge');
+        if (lockBadge) {
+          lockBadge.textContent = initialCordLocked ? 'Locked (Sequence Active)' : 'Editable (First Cut)';
+          lockBadge.className = initialCordLocked
+            ? 'text-[10px] font-mono text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/30'
+            : 'text-[10px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700/80';
+        }
+
+        if (currentCalculation) {
+          const c = currentCalculation;
+          const cutting = document.getElementById('dispCuttingPoint');
+          const result = document.getElementById('dispResult');
+          const remaining = document.getElementById('dispRemaining');
+          const meterCheck = document.getElementById('dispMeterCheck');
+          if (cutting) cutting.textContent = `${c.cuttingPoint} m`;
+          if (result) result.textContent = `${c.result} m`;
+          if (remaining) remaining.textContent = `${c.cuttingPoint} m`;
+          if (meterCheck) meterCheck.textContent = `${c.meterCheck} m`;
+          const saveBtn = document.getElementById('btnSave');
+          const nextBtn = document.getElementById('btnNext');
+          if (saveBtn) saveBtn.disabled = true;
+          if (nextBtn) nextBtn.disabled = false;
+        }
+      } catch (error) {
+        console.warn('Could not restore CordMate draft:', error);
+      }
+    }
+
+    function exportAllCordMateData() {
+      try {
+        saveCordMateDraft();
+        const backup = {
+          app: 'CordMate',
+          formatVersion: 1,
+          exportedAt: new Date().toISOString(),
+          localStorage: {}
+        };
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('cord_')) {
+            backup.localStorage[key] = localStorage.getItem(key);
+          }
+        }
+        backup.localStorage.cord_calc_history = JSON.stringify(savedCutHistory);
+        const blob = new Blob([JSON.stringify(backup, null, 2)], {
+          type: 'application/json;charset=utf-8'
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `cordmate-full-backup-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        showToast('Full backup exported, including logs and unfinished work.', 'success');
+      } catch (error) {
+        console.error('Backup export failed:', error);
+        showToast('Could not export the full backup.', 'error');
+      }
+    }
+
+    function importAllCordMateData(event) {
+      const input = event?.target;
+      const file = input?.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+
+      reader.onload = () => {
+        try {
+          const backup = JSON.parse(String(reader.result || ''));
+          if (!backup || backup.app !== 'CordMate' || !backup.localStorage ||
+              typeof backup.localStorage !== 'object') {
+            throw new Error('This is not a valid CordMate full backup JSON file.');
+          }
+          if (!confirm('Restore this CordMate backup? Current CordMate data and logs will be replaced. Export a backup of the current data first if you need it.')) {
+            return;
+          }
+
+          Object.entries(backup.localStorage).forEach(([key, value]) => {
+            if (key.startsWith('cord_') && typeof value === 'string') {
+              localStorage.setItem(key, value);
+            }
+          });
+
+          // Rehydrate the app from the restored browser storage.
+          loadLocalStorageData();
+          restoreCordMateDraft();
+          savedCutHistory = JSON.parse(localStorage.getItem('cord_calc_history') || '[]');
+          renderHistoryTable();
+          showToast('Backup restored. Your logs and unfinished cut are back.', 'success');
+        } catch (error) {
+          console.error('Backup import failed:', error);
+          showToast(error.message || 'Could not restore this backup.', 'error');
+        } finally {
+          if (input) input.value = '';
+        }
+      };
+
+      reader.onerror = () => {
+        showToast('Could not read the selected backup file.', 'error');
+        if (input) input.value = '';
+      };
+      reader.readAsText(file);
     }
 
     function showToast(message, type = 'info') {
